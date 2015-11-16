@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 var fs = require("fs");
-var execSync = require("child_process").execSync;
+var exec = require("child_process").exec;
 
 var CWD = process.cwd();
 var POSTINSTALL_BUILD_CWD = process.env.POSTINSTALL_BUILD_CWD;
@@ -19,7 +19,7 @@ if (POSTINSTALL_BUILD_CWD !== CWD) {
 
   fs.stat(BUILD_ARTIFACT, function(err, stats) {
     if (err || !(stats.isFile() || stats.isDirectory())) {
-      var opts = { env: process.env, stdio: [0, 1, 2] };
+      var opts = { env: process.env };
       // This script will run again after we run `npm install` below. Set an
       // environment variable to tell it to skip the check. Really we just want
       // the execSync's `env` to be modified, but it's easier just modify and
@@ -27,13 +27,28 @@ if (POSTINSTALL_BUILD_CWD !== CWD) {
       process.env.POSTINSTALL_BUILD_CWD = CWD;
       // We already have prod dependencies, that's what triggered `postinstall`
       // in the first place. So only install dev.
-      execSync("npm install --only=dev", opts);
-      // Don't need the flag anymore as `postinstall` was already run.
-      // Change it back so the environment is minimally changed for the
-      // remaining commands.
-      process.env.POSTINSTALL_BUILD_CWD = POSTINSTALL_BUILD_CWD;
-      execSync(BUILD_COMMAND, opts);
-      execSync("npm prune --production", opts);
+      exec("npm install --only=dev", opts, function(err, stdout, stderr) {
+        if (err) {
+          stderr.write("" + err + "\n");
+          process.exit(1);
+        }
+        // Don't need the flag anymore as `postinstall` was already run.
+        // Change it back so the environment is minimally changed for the
+        // remaining commands.
+        process.env.POSTINSTALL_BUILD_CWD = POSTINSTALL_BUILD_CWD;
+        exec(BUILD_COMMAND, opts, function(err, stdout, stderr) {
+          if (err) {
+            stderr.write("" + err + "\n");
+            process.exit(1);
+          }
+          exec("npm prune --production", opts, function(err, stdout, stderr) {
+            if (err) {
+              stderr.write("" + err + "\n");
+              process.exit(1);
+            }
+          });
+        })
+      });
     }
   });
 }
