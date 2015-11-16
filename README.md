@@ -1,3 +1,5 @@
+[![Travis Status][trav_img]][trav_site]
+
 # postinstall-build
 
 ```shell
@@ -60,3 +62,6 @@ exists. If not, it will run the second argument, `npm run build-lib`. Because
 `build-lib` requires Babel, a dev dependency, it will run
 `npm install --only=dev` before building. When the build is done, it will run
 `npm prune --production` to clean up. That's it!
+
+[trav_img]: https://travis-ci.org/exogen/postinstall-build.svg
+[trav_site]: https://travis-ci.org/exogen/postinstall-build
