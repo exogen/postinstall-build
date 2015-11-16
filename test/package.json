@@ -1,0 +1,15 @@
+{
+  "name": "postinstall-build-test",
+  "private": true,
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {},
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "package-c": "./package-c",
+    "package-d": "./package-d",
+    "package-e": "./package-e"
+  }
+}

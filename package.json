@@ -1,0 +1,21 @@
+{
+  "name": "postinstall-build",
+  "version": "0.0.1",
+  "description": "Helper for conditionally building your package on `postinstall` in order to support `git` installs.",
+  "main": "index.js",
+  "bin": {
+    "postinstall-build": "index.js"
+  },
+  "scripts": {
+    "test": "cd test && ./test.sh"
+  },
+  "keywords": [
+    "npm",
+    "postinstall",
+    "build",
+    "lib",
+    "scripts"
+  ],
+  "author": "Brian Beck",
+  "license": "MIT"
+}

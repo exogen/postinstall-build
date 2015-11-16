@@ -1,0 +1,26 @@
+language: node_js
+
+node_js:
+  - "0.10"
+  - "0.12"
+  - "4.2"
+
+# Use container-based Travis infrastructure.
+sudo: false
+
+branches:
+  only:
+    - master
+
+env:
+  matrix:
+    - TEST_NPM_VERSION=2
+    - TEST_NPM_VERSION=3
+
+before_install:
+  # Make sure we have a specific version of npm.
+  - npm install -g "npm@$TEST_NPM_VERSION"
+
+script:
+  - npm --version
+  - npm run test
