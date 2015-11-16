@@ -29,7 +29,7 @@ if (POSTINSTALL_BUILD_CWD !== CWD) {
       // in the first place. So only install dev.
       exec("npm install --only=dev", opts, function(err, stdout, stderr) {
         if (err) {
-          stderr.write("" + err + "\n");
+          console.error(err);
           process.exit(1);
         }
         // Don't need the flag anymore as `postinstall` was already run.
@@ -38,12 +38,12 @@ if (POSTINSTALL_BUILD_CWD !== CWD) {
         process.env.POSTINSTALL_BUILD_CWD = POSTINSTALL_BUILD_CWD;
         exec(BUILD_COMMAND, opts, function(err, stdout, stderr) {
           if (err) {
-            stderr.write("" + err + "\n");
+            console.error(err);
             process.exit(1);
           }
           exec("npm prune --production", opts, function(err, stdout, stderr) {
             if (err) {
-              stderr.write("" + err + "\n");
+              console.error(err);
               process.exit(1);
             }
           });
