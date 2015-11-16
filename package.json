@@ -1,6 +1,6 @@
 {
   "name": "postinstall-build",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Helper for conditionally building your package on `postinstall` in order to support `git` installs.",
   "repository": {
     "type": "git",
