@@ -49,7 +49,7 @@ Here's an example using Babel:
     "postinstall": "postinstall-build lib 'npm run build-lib'"
   },
   "dependencies": {
-    "postinstall-build": "0.1.x"
+    "postinstall-build": "0.2.x"
   },
   "devDependencies": {
     "babel": "5.x.x"
