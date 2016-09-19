@@ -10,6 +10,7 @@
   "dependencies": {
     "package-c": "./package-c",
     "package-d": "./package-d",
-    "package-e": "./package-e"
+    "package-e": "./package-e",
+    "package-f": "./package-f"
   }
 }

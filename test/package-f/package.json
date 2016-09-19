@@ -1,0 +1,19 @@
+{
+  "name": "package-f",
+  "version": "1.0.0",
+  "description": "Test that we can have a dev dependency that uses postinstall-build",
+  "main": "lib/index.js",
+  "scripts": {
+    "build-lib": "node -e 'require(\"package-e\")' && babel -d lib src",
+    "postinstall": "postinstall-build --silent lib 'npm run build-lib'"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "postinstall-build": "../.."
+  },
+  "devDependencies": {
+    "babel": "5.x.x",
+    "package-e": "../package-e"
+  }
+}
