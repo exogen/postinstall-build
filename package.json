@@ -1,7 +1,7 @@
 {
   "name": "postinstall-build",
   "version": "0.2.1",
-  "description": "Helper for conditionally building your package on `postinstall` in order to support `git` installs.",
+  "description": "Helper for conditionally building your npm package on postinstall in order to support git installs.",
   "repository": {
     "type": "git",
     "url": "https://github.com/exogen/postinstall-build.git"
