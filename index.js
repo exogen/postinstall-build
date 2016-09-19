@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 var fs = require('fs')
+var path = require('path')
 var spawn = require('child_process').spawn
 
 // Use `spawn` to make a better `exec` without stdio buffering.
@@ -59,7 +60,7 @@ function safeExit (code) {
 }
 
 var CWD = process.cwd()
-var POSTINSTALL_BUILD_CWD = process.env.POSTINSTALL_BUILD_CWD
+var POSTINSTALL_BUILD_CWD = process.env.POSTINSTALL_BUILD_CWD || ''
 
 // If we didn't have this check, then we'd be stuck in an infinite `postinstall`
 // loop, since we run `npm install --only=dev` below, triggering another
@@ -86,15 +87,37 @@ if (POSTINSTALL_BUILD_CWD !== CWD) {
 
   fs.stat(BUILD_ARTIFACT, function (err, stats) {
     if (err || !(stats.isFile() || stats.isDirectory())) {
-      var opts = { env: process.env }
-      if (FLAGS.silent) {
-        opts.stdio = 'ignore'
-      }
+      // After building, we almost always want to prune back to the production
+      // dependencies, so that the transient development dependencies aren't
+      // left behind. The only reason we wouldn't want to prune is if we're the
+      // top-level package being `npm install`ed with no arguments for
+      // development or testing purposes. If we're the `postinstall` script of a
+      // dependency, we should always prune. Unfortunately, npm doesn't set
+      // any helpful environment variables to indicate whether we're being
+      // installed as a dependency or not. The best we can do is check whether
+      // the parent directory is `node_modules`.
+      var isDependency = path.basename(path.dirname(CWD)) === 'node_modules'
+      // If we're the top-level package being `npm install`ed with no
+      // arguments, we still might want to prune if certain flags indicate that
+      // only production dependencies were requested.
+      var isProduction = (process.env.npm_config_production === 'true' &&
+                          process.env.npm_config_only !== 'development' &&
+                          process.env.npm_config_only !== 'dev')
+      var isOnlyProduction = (process.env.npm_config_only === 'production' ||
+                              process.env.npm_config_only === 'prod')
+      var prune = isDependency || isProduction || isOnlyProduction
+
       // This script will run again after we run `npm install` below. Set an
       // environment variable to tell it to skip the check. Really we just want
       // the execSync's `env` to be modified, but it's easier just modify and
       // pass along the entire `process.env`.
       process.env.POSTINSTALL_BUILD_CWD = CWD
+
+      var opts = { env: process.env }
+      if (FLAGS.silent) {
+        opts.stdio = 'ignore'
+      }
+
       // We already have prod dependencies, that's what triggered `postinstall`
       // in the first place. So only install dev.
       exec('npm install --only=dev', opts, function (err) {
@@ -111,12 +134,14 @@ if (POSTINSTALL_BUILD_CWD !== CWD) {
             console.error(err)
             return safeExit(1)
           }
-          exec('npm prune --production', opts, function (err) {
-            if (err) {
-              console.error(err)
-              return safeExit(1)
-            }
-          })
+          if (prune) {
+            exec('npm prune --production', opts, function (err) {
+              if (err) {
+                console.error(err)
+                return safeExit(1)
+              }
+            })
+          }
         })
       })
     }

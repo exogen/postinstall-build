@@ -14,9 +14,10 @@
     "postinstall-build": "index.js"
   },
   "scripts": {
-    "check": "npm run lint && npm run test",
+    "check": "npm run lint && npm test",
     "lint": "standard --verbose | snazzy",
-    "test": "cd test && ./test.sh"
+    "test": "cd test && ./test.sh",
+    "test:reset": "cd test && ./reset.sh"
   },
   "keywords": [
     "npm",

@@ -1,4 +1,6 @@
-#!/bin/sh -e
+#!/bin/bash
+
+EXIT_STATUS=0
 
 # Each test package specifies other test packages as dependencies using a
 # relative path to the package. But relative paths don't behave the same
@@ -7,12 +9,18 @@
 # package.json with absolute paths.
 node fix-relative-deps.js package-*/package.json
 
-rm -rf node_modules
-npm install
-npm ls && echo "OK, no extraneous deps"
-node -e "require('package-c')" && echo "OK, c worked"
-node -e "require('package-d')" && echo "OK, d worked"
+# In case cleanup failed before.
 rm -rf node_modules
 
-# Reset modified package.json files.
-git checkout -- package-*/package.json
+npm install && \
+  npm ls && \
+  node -e "require('package-c')" && \
+  node -e "require('package-d')" && \
+  npm run test:cowsay && \
+  echo "OK"
+
+EXIT_STATUS=$?
+
+./reset.sh
+
+exit $EXIT_STATUS

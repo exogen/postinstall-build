@@ -4,13 +4,20 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "postinstall": "postinstall-build xxx '$(npm bin)/cowthink Wonder if this works...'",
+    "test:cowsay": "$(npm bin)/cowsay Still here."
+  },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "package-c": "./package-c",
     "package-d": "./package-d",
     "package-e": "./package-e",
-    "package-f": "./package-f"
+    "package-f": "./package-f",
+    "postinstall-build": ".."
+  },
+  "devDependencies": {
+    "cowsay": "^1.0.0"
   }
 }
