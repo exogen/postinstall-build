@@ -14,6 +14,8 @@
     "postinstall-build": "index.js"
   },
   "scripts": {
+    "check": "npm run lint && npm run test",
+    "lint": "standard --verbose | snazzy",
     "test": "cd test && ./test.sh"
   },
   "keywords": [
@@ -24,5 +26,9 @@
     "scripts"
   ],
   "author": "Brian Beck",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "snazzy": "^5.0.0",
+    "standard": "^8.1.0"
+  }
 }

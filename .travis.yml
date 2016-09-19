@@ -24,4 +24,4 @@ before_install:
 
 script:
   - npm --version
-  - npm run test
+  - npm run check
