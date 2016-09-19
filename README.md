@@ -21,9 +21,9 @@ postinstall-build <PATH_TO_BUILD_ARTIFACT> <BUILD_COMMAND>
 ## Explanation
 
 Sometimes you want to install or depend on a package from someplace other than
-NPM – for example, from a `git` URL. If the package needs to be transpiled by
+npm – for example, from a `git` URL. If the package needs to be transpiled by
 a tool like Babel, then this can be tricky: most people put their build step in
-the `version` or `prepublish` hooks, and if you're not installing from NPM then
+the `version` or `prepublish` hooks, and if you're not installing from npm then
 this step probably wasn't run (unless the build artifacts are checked into
 source).
 
@@ -33,7 +33,7 @@ necessitates having your build dependencies (like Babel or webpack) available �
 in other words, they'd need to be production `dependencies` instead of
 `devDependencies`, even though the module itself doesn't `require` them (unlike
 real dependencies, they're only used in the build step). That means even
-everyone installing from NPM wastes time installing them, even though they
+everyone installing from npm wastes time installing them, even though they
 already have the build artifacts!
 
 This helper fixes that. Just tell it where a build artifact is and what your
