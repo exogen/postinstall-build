@@ -52,7 +52,8 @@ Here's an example using Babel:
     "postinstall-build": "^1.0.0"
   },
   "devDependencies": {
-    "babel-cli": "^6.0.0"
+    "babel-cli": "^6.0.0",
+    "babel-preset-es2015": "^6.0.0"
   }
 }
 ```
