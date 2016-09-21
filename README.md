@@ -54,6 +54,8 @@ This helper fixes that. Just tell it where a build artifact is and what your
 build step is, and it’ll do the rest. Used as intended, `postinstall-build`
 should be a production `dependency`.
 
+## Example
+
 Here’s an example using Babel:
 
 ```json
