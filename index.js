@@ -9,8 +9,9 @@ function exec (command, options, callback) {
   var sh = 'sh'
   var shFlag = '-c'
 
+  // Doesn't need to support all options, we only ever pass these two.
   var shOpts = {
-    env: options.env, // We only ever pass `env`.
+    env: options.env,
     stdio: options.stdio || 'inherit'
   }
 
@@ -22,14 +23,18 @@ function exec (command, options, callback) {
   }
 
   var proc = spawn(sh, [shFlag, command], shOpts)
+  var done = false
 
   function procKill () {
     proc.kill()
   }
 
   function procDone (err) {
-    process.removeListener('SIGTERM', procKill)
-    callback(err)
+    if (!done) {
+      done = true
+      process.removeListener('SIGTERM', procKill)
+      callback(err)
+    }
   }
 
   process.once('SIGTERM', procKill)
@@ -47,9 +52,9 @@ function exec (command, options, callback) {
     }
     procDone(err)
   })
-};
+}
 
-// If we were to `process.exit` immediately after logging to the console, then
+// If we call `process.exit` immediately after logging to the console, then
 // any process that is reading our output through a pipe would potentially get
 // truncated output, because the pipe would be closed before it could be read.
 // See: https://github.com/nodejs/node-v0.x-archive/issues/3737
@@ -65,7 +70,7 @@ var POSTINSTALL_BUILD_CWD = process.env.POSTINSTALL_BUILD_CWD || ''
 // If we didn't have this check, then we'd be stuck in an infinite `postinstall`
 // loop, since we run `npm install --only=dev` below, triggering another
 // `postinstall`. We can't use `--ignore-scripts` because that ignores scripts
-// on all the modules that get installed, too, which would break stuff. So
+// in all the modules that get installed, too, which would break stuff. So
 // instead, we set an environment variable, `POSTINSTALL_BUILD_CWD`, that keeps
 // track of what we're installing. It's more than just a yes/no flag because
 // the dev dependencies we're installing might use `postinstall-build` too, and
@@ -78,11 +83,30 @@ if (POSTINSTALL_BUILD_CWD !== CWD) {
     var arg = process.argv[i]
     if (arg === '--silent') {
       FLAGS.silent = true
-    } else if (typeof BUILD_ARTIFACT === 'undefined') {
+    } else if (arg === '--script') {
+      // Consume the next argument.
+      FLAGS.script = process.argv[++i]
+    } else if (arg.indexOf('--script=') === 0) {
+      FLAGS.script = arg.slice(9)
+    } else if (BUILD_ARTIFACT == null) {
       BUILD_ARTIFACT = arg
-    } else if (typeof BUILD_COMMAND === 'undefined') {
+    } else if (BUILD_COMMAND == null) {
       BUILD_COMMAND = arg
     }
+  }
+
+  if (FLAGS.script != null) {
+    // Hopefully people aren't putting special characters that need escaping
+    // in their script names. If they are, they can take care of escaping it
+    // themselves when they supply `--script`.
+    BUILD_COMMAND = 'npm run ' + FLAGS.script
+  } else if (BUILD_COMMAND == null) {
+    // If no command or script was given, run the 'build' script.
+    BUILD_COMMAND = 'npm run build'
+  }
+
+  if (BUILD_ARTIFACT == null) {
+    throw new Error('A build artifact must be supplied to postinstall-build.')
   }
 
   fs.stat(BUILD_ARTIFACT, function (err, stats) {
@@ -109,8 +133,8 @@ if (POSTINSTALL_BUILD_CWD !== CWD) {
 
       // This script will run again after we run `npm install` below. Set an
       // environment variable to tell it to skip the check. Really we just want
-      // the execSync's `env` to be modified, but it's easier just modify and
-      // pass along the entire `process.env`.
+      // the spawned child's `env` to be modified, but it's easier just modify
+      // and pass along our entire `process.env`.
       process.env.POSTINSTALL_BUILD_CWD = CWD
 
       var opts = { env: process.env }

@@ -18,10 +18,18 @@ env:
     - TEST_NPM_VERSION=2
     - TEST_NPM_VERSION=3
 
+matrix:
+  allow_failures:
+    - env: TEST_NPM_VERSION=2
+
 before_install:
   # Make sure we have a specific version of npm.
   - npm install -g "npm@$TEST_NPM_VERSION"
+  # Help out npm on Travis...
+  - npm config set registry "http://registry.npmjs.org/"
+  - npm config set fetch-retries 10
 
 script:
   - npm --version
-  - npm run check
+  - npm run lint
+  - npm test
