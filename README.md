@@ -62,7 +62,7 @@ Here’s an example using Babel:
 {
   "scripts": {
     "build-lib": "babel -d lib src",
-    "postinstall": "postinstall-build lib 'npm run build-lib'"
+    "postinstall": "postinstall-build lib --script build-lib"
   },
   "dependencies": {
     "postinstall-build": "^1.0.0"
