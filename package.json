@@ -13,6 +13,9 @@
   "bin": {
     "postinstall-build": "index.js"
   },
+  "files": [
+    "index.js"
+  ],
   "scripts": {
     "build": "npm run build:docs",
     "build:docs": "doctoc --title '## Contents' README.md",
