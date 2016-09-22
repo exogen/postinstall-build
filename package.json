@@ -14,11 +14,17 @@
     "postinstall-build": "index.js"
   },
   "scripts": {
+    "build": "npm run build:docs",
+    "build:docs": "doctoc --title '## Contents' README.md",
     "check": "npm run lint && npm test",
     "lint": "standard --verbose | snazzy",
     "test": "cd test && ./test.sh",
     "test:reset": "cd test && ./reset.sh"
   },
+  "pre-commit": [
+    "build:docs",
+    "lint"
+  ],
   "keywords": [
     "npm",
     "postinstall",
@@ -29,6 +35,8 @@
   "author": "Brian Beck",
   "license": "MIT",
   "devDependencies": {
+    "doctoc": "^1.2.0",
+    "pre-commit": "^1.1.3",
     "snazzy": "^5.0.0",
     "standard": "^8.1.0"
   }

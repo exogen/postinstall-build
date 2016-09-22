@@ -4,15 +4,32 @@
 
 # postinstall-build
 
+Conditionally build in the `postinstall` hook without moving your
+`devDependencies` to `dependencies`.
+
 ```shell
 npm install postinstall-build --save
 ```
 
-## What it does:
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+## Contents
 
-1. Check if your build artifacts exist
-2. If not, temporarily install `devDependencies` and build
-3. Clean up anything left behind... and that’s it!
+- [What does it do?](#what-does-it-do)
+- [Usage](#usage)
+  - [Options](#options)
+- [Motivation](#motivation)
+- [Example](#example)
+- [Caveats](#caveats)
+  - [Bugs in npm](#bugs-in-npm)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## What does it do?
+
+1. Check if your build artifacts exist.
+2. If not, temporarily install `devDependencies` and build.
+3. Clean up anything left behind… and that’s it!
 
 ## Usage
 
@@ -56,7 +73,7 @@ already have the build artifacts!
 
 This helper fixes that. Just tell it where a build artifact is and what your
 build step is, and it’ll do the rest. Used as intended, `postinstall-build`
-should be a production `dependency`.
+should be a production dependency.
 
 ## Example
 
@@ -65,8 +82,8 @@ Here’s an example using Babel:
 ```json
 {
   "scripts": {
-    "build-lib": "babel -d lib src",
-    "postinstall": "postinstall-build lib --script build-lib"
+    "build-lib": "babel --presets es2015 -d lib src",
+    "postinstall": "postinstall-build lib 'npm run build-lib'"
   },
   "dependencies": {
     "postinstall-build": "^1.0.0"
@@ -79,14 +96,19 @@ Here’s an example using Babel:
 ```
 
 The `postinstall-build` helper will check whether the first argument, `lib`,
-exists. If not, it will run the second argument, `npm run build-lib`. Because
-`build-lib` requires Babel, a dev dependency, it will run
-`npm install --only=dev` before building. When the build is done, it will run
+exists. If not, it will run the second argument, `npm run build-lib`. Since
+this probably requires your build dependencies (in this case Babel), it will
+run `npm install --only=dev` first. When the build is done, it will run
 `npm prune --production` to clean up. That’s it!
+
+In this example the build command is another npm script. For convenience this
+could also be written as `postinstall-build lib --script build-lib`.
 
 ## Caveats
 
-### I recommend using npm 3 or better.
+### Bugs in npm
+
+**I recommend using npm 3 or better.**
 
 There are several distinct bugs in npm itself that you may encounter when using
 `postinstall-build` with npm 2. I have not been able to work around these nor
@@ -94,17 +116,26 @@ even reproduce them locally; they are especially prevalent on the combination
 of Node 0.12, npm 2, and the Docker environment used by Travis. To the best of
 my knowledge they are no fault of this package and are widely reported npm bugs.
 
-1. `postinstall-build: not found`: Sometimes npm triggers `postinstall` when a
-  package’s dependencies aren’t actually available.
-2. `Callback called more than once.`: npm has some faulty async code. This
-  message comes from within the npm codebase and does not refer to any
-  callbacks within `postinstall-build`.
-3. `ENOENT` during `npm prune`: npm is probably trying to prune a file that
-  was already removed or never existed. Seems to happen when there is a larger
-  `devDependency` tree to prune.
-4. `ECONNRESET`: npm has trouble making lots of connections to its own registry.
-  You can use `npm config set fetch-retries 5` (for example) to work around
-  this; using the non-HTTPS registry might also help.
+* **postinstall-build: not found**
+
+  Sometimes npm triggers `postinstall` when a package’s dependencies aren’t
+  actually available yet.
+
+* **Callback called more than once.**
+
+  npm has some faulty async code. This message comes from within the npm
+  codebase and does not refer to any callbacks within `postinstall-build`.
+
+* **ENOENT during npm prune**
+
+  npm is probably trying to prune a file that was already removed or never
+  existed. Seems to happen when there is a larger `devDependency` tree to prune.
+
+* **ECONNRESET**
+
+  npm has trouble making lots of connections to its own registry. You can use
+  `npm config set fetch-retries 5` (for example) to work around this; using the
+  non-HTTPS registry might also help.
 
 [trav_img]: https://travis-ci.org/exogen/postinstall-build.svg
 [trav_site]: https://travis-ci.org/exogen/postinstall-build
