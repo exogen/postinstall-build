@@ -1,4 +1,6 @@
 [![Travis Status][trav_img]][trav_site]
+[![npm Version][npm_img]][npm_site]
+[![npm Downloads][downloads_img]][downloads_site]
 
 # postinstall-build
 
@@ -104,3 +106,7 @@ my knowledge they are no fault of this package and are widely reported npm bugs.
 
 [trav_img]: https://travis-ci.org/exogen/postinstall-build.svg
 [trav_site]: https://travis-ci.org/exogen/postinstall-build
+[npm_img]: https://img.shields.io/npm/v/postinstall-build.svg
+[npm_site]: https://www.npmjs.com/package/postinstall-build
+[downloads_img]: https://img.shields.io/npm/dm/postinstall-build.svg
+[downloads_site]: https://www.npmjs.com/package/postinstall-build
