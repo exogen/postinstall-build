@@ -22,7 +22,9 @@ postinstall-build [options] <artifact> [command]
 
 ### Options
 
-* `--silent`: Silence the build command’s stdout and stderr.
+* `--silent`: Silence the build command’s stdout and stderr. This was the
+  default behavior pre-1.0. Note that this may make debugging much more
+  difficult if something goes wrong.
 * `--script`: Run the given npm script from `package.json` instead of supplying
   a full build command. Specified like: `--script name` or `--script=name`.
 
