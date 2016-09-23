@@ -86,7 +86,7 @@ Here’s an example using Babel:
     "postinstall": "postinstall-build lib 'npm run build-lib'"
   },
   "dependencies": {
-    "postinstall-build": "^1.0.0"
+    "postinstall-build": "^2.0.0"
   },
   "devDependencies": {
     "babel-cli": "^6.0.0",
