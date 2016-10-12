@@ -4,7 +4,7 @@
   "description": "Test that we can have a dev dependency that uses postinstall-build",
   "main": "lib/index.js",
   "scripts": {
-    "build-lib": "node -e 'require(\"package-a\")' && babel --presets es2015 -d lib src",
+    "build-lib": "node -e \"require('package-a')\" && babel --presets es2015 -d lib src",
     "postinstall": "postinstall-build --script build-lib lib"
   },
   "author": "",

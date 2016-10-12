@@ -5,8 +5,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "postinstall": "postinstall-build xxx '$(npm bin)/cowthink Wonder if this works...'",
-    "test:cowsay": "$(npm bin)/cowsay Still here."
+    "postinstall": "postinstall-build xxx \"cowthink Wonder if this works...\"",
+    "reset": "npm run reset:node_modules && npm run reset:packages",
+    "reset:node_modules": "cd .. && npm run test:reset:node_modules",
+    "reset:packages": "git checkout -- package-a/package.json package-b/package.json package-c/package.json package-d/package.json package-e/package.json package-f/package.json",
+    "test": "npm run reset:node_modules && npm run test:fix-relative-deps && npm run test:postinstall-build && npm run reset",
+    "test:fix-relative-deps": "node fix-relative-deps.js package-a/package.json package-b/package.json package-c/package.json package-d/package.json package-e/package.json package-f/package.json",
+    "test:postinstall-build": "npm install && npm ls && node -e \"require('package-c')\" && node -e \"require('package-d')\" && npm run test:cowsay && echo OK",
+    "test:cowsay": "cowsay Still here."
   },
   "author": "",
   "license": "ISC",

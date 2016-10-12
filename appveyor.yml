@@ -1,0 +1,41 @@
+environment:
+  matrix:
+    - nodejs_version: "0.10"
+      TEST_NPM_VERSION: "3"
+
+    - nodejs_version: "0.12"
+      TEST_NPM_VERSION: "3"
+
+    - nodejs_version: "4.4"
+      TEST_NPM_VERSION: "3"
+
+    - nodejs_version: "6.5"
+      TEST_NPM_VERSION: "3"
+
+    - nodejs_version: "0.10"
+      TEST_NPM_VERSION: "2"
+
+    - nodejs_version: "0.12"
+      TEST_NPM_VERSION: "2"
+
+    - nodejs_version: "4.4"
+      TEST_NPM_VERSION: "2"
+
+    - nodejs_version: "6.5"
+      TEST_NPM_VERSION: "2"
+
+matrix:
+  allow_failures:
+    - TEST_NPM_VERSION: "2"
+
+install:
+  - ps: Install-Product node $env:nodejs_version
+  - ps: npm install -g "npm@$env:TEST_NPM_VERSION"
+  - npm install
+
+test_script:
+  - node --version
+  - npm --version
+  - npm test
+
+build: off
