@@ -17,6 +17,7 @@ env:
   matrix:
     - TEST_NPM_VERSION=2
     - TEST_NPM_VERSION=3
+    - TEST_NPM_VERSION=4
 
 matrix:
   allow_failures:
