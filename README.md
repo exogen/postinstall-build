@@ -115,13 +115,19 @@ could also be written as `postinstall-build lib --script build-lib`.
 
 ### Bugs in npm
 
-**I recommend using npm 3 or better.**
+**I recommend using npm 3 or better, except for npm 4.1.x.**
 
 There are several distinct bugs in npm itself that you may encounter when using
 `postinstall-build` with npm 2. I have not been able to work around these nor
 even reproduce them locally; they are especially prevalent on the combination
 of Node 0.12, npm 2, and the Docker environment used by Travis. To the best of
 my knowledge they are no fault of this package and are widely reported npm bugs.
+
+* **extraneous packages**
+
+  The `prune` command is broken in npm 4.1.x, and is unable to correctly prune
+  `devDependencies`. Thus, when `postinstall-build` is finishing up, it leaves
+  behind extraneous packages.
 
 * **postinstall-build: not found**
 
