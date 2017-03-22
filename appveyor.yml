@@ -6,6 +6,12 @@ environment:
     - nodejs_version: "6.5"
       TEST_NPM_VERSION: "4"
 
+    - nodejs_version: "4.4"
+      TEST_NPM_VERSION: "4.0"
+
+    - nodejs_version: "6.5"
+      TEST_NPM_VERSION: "4.0"
+
     - nodejs_version: "0.10"
       TEST_NPM_VERSION: "3"
 
@@ -32,6 +38,7 @@ environment:
 
 matrix:
   allow_failures:
+    - TEST_NPM_VERSION: "4"
     - TEST_NPM_VERSION: "2"
 
 install:
