@@ -113,6 +113,19 @@ could also be written as `postinstall-build lib --script build-lib`.
 
 ## Caveats
 
+### Bugs in Yarn
+
+* **'your-package' is not in the npm registry.**
+
+  Yarn will read your custom registry setting from `.npmrc`, but fails to
+  communicate this via the `$npm_config_registry` environment variable. So any
+  `npm` commands that were triggered by a Yarn install (like those run by
+  `postinstall-build`) pick up Yarn‘s default `$npm_config_registry` setting
+  instead of the one specified in `.npmrc`.
+  
+  For the time being you can solve this by adding a `.yarnrc` file alongside your
+  `.npmrc`, which will cause `$npm_config_registry` to behave as expected.
+
 ### Bugs in npm
 
 **I recommend using npm 3 or better, except for npm 4.1.x.**
