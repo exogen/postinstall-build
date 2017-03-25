@@ -22,6 +22,7 @@ npm install postinstall-build --save
 - [Motivation](#motivation)
 - [Example](#example)
 - [Caveats](#caveats)
+  - [Bugs in Yarn](#bugs-in-yarn)
   - [Bugs in npm](#bugs-in-npm)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
