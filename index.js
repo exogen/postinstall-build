@@ -20,6 +20,12 @@ function exec (command, options, callback) {
     sh = process.env.comspec || 'cmd'
     shFlag = '/d /s /c'
     shOpts.windowsVerbatimArguments = true
+    // Even though `command` may properly quote arguments that contain spaces,
+    // cmd.exe might strip them. Wrap the entire command in quotes, and the /s
+    // flag will remove them and leave the rest.
+    if (options.quote) {
+      command = '"' + command + '"'
+    }
   }
 
   var proc = spawn(sh, [shFlag, command], shOpts)
@@ -64,87 +70,117 @@ function safeExit (code) {
   })
 }
 
-var CWD = process.cwd()
-var POSTINSTALL_BUILD_CWD = process.env.POSTINSTALL_BUILD_CWD || ''
+function postinstallBuild () {
+  var CWD = process.cwd()
+  var POSTINSTALL_BUILD_CWD = process.env.POSTINSTALL_BUILD_CWD || ''
 
-// If we didn't have this check, then we'd be stuck in an infinite `postinstall`
-// loop, since we run `npm install --only=dev` below, triggering another
-// `postinstall`. We can't use `--ignore-scripts` because that ignores scripts
-// in all the modules that get installed, too, which would break stuff. So
-// instead, we set an environment variable, `POSTINSTALL_BUILD_CWD`, that keeps
-// track of what we're installing. It's more than just a yes/no flag because
-// the dev dependencies we're installing might use `postinstall-build` too, and
-// we don't want the flag to prevent them from running.
-if (POSTINSTALL_BUILD_CWD !== CWD) {
-  var BUILD_ARTIFACT
-  var BUILD_COMMAND
-  var FLAGS = {}
+  // If we didn't have this check, then we'd be stuck in an infinite
+  // `postinstall` loop, since we run `npm install --only=dev` below,
+  // triggering another `postinstall`. We can't use `--ignore-scripts` because
+  // that ignores scripts in all the modules that get installed, too, which
+  // would break stuff. So instead, we set an environment variable,
+  // `POSTINSTALL_BUILD_CWD`, that keeps track of what we're installing. It's
+  // more than just a yes/no flag because the dev dependencies we're installing
+  // might use `postinstall-build` too, and we don't want the flag to prevent
+  // them from running.
+  if (POSTINSTALL_BUILD_CWD === CWD) {
+    return
+  }
+
+  var buildArtifact
+  var buildCommand
+  var flags = { quote: false }
   for (var i = 2; i < process.argv.length; i++) {
     var arg = process.argv[i]
     if (arg === '--silent') {
-      FLAGS.silent = true
+      flags.silent = true
+    } else if (arg === '--only-as-dependency') {
+      flags.onlyAsDependency = true
     } else if (arg === '--script') {
       // Consume the next argument.
-      FLAGS.script = process.argv[++i]
+      flags.script = process.argv[++i]
     } else if (arg.indexOf('--script=') === 0) {
-      FLAGS.script = arg.slice(9)
-    } else if (BUILD_ARTIFACT == null) {
-      BUILD_ARTIFACT = arg
-    } else if (BUILD_COMMAND == null) {
-      BUILD_COMMAND = arg
+      flags.script = arg.slice(9)
+    } else if (buildArtifact == null) {
+      buildArtifact = arg
+    } else if (buildCommand == null) {
+      buildCommand = arg
     }
   }
 
-  if (FLAGS.script != null) {
+  // Some packages (e.g. `ember-cli`) install their own version of npm, which
+  // can shadow the expected version and break the package trying to use
+  // `postinstall-build`. If we're running
+  var npm = 'npm'
+  var execPath = process.env.npm_execpath
+  var userAgent = process.env.npm_config_user_agent || ''
+  // If the user agent doesn't start with `npm/`, just fall back to running
+  // `npm` since alternative agents (e.g. Yarn) may not support the same
+  // commands (like `prune`).
+  if (execPath && userAgent.indexOf('npm/') === 0) {
+    npm = '"' + process.argv[0] + '" "' + execPath + '"'
+  }
+
+  if (flags.script != null) {
     // Hopefully people aren't putting special characters that need escaping
     // in their script names. If they are, they can take care of escaping it
     // themselves when they supply `--script`.
-    BUILD_COMMAND = 'npm run ' + FLAGS.script
-  } else if (BUILD_COMMAND == null) {
+    flags.quote = true
+    buildCommand = npm + ' run ' + flags.script
+  } else if (buildCommand == null) {
     // If no command or script was given, run the 'build' script.
-    BUILD_COMMAND = 'npm run build'
+    flags.quote = true
+    buildCommand = npm + ' run build'
   }
 
-  if (BUILD_ARTIFACT == null) {
+  if (buildArtifact == null) {
     throw new Error('A build artifact must be supplied to postinstall-build.')
   }
 
-  fs.stat(BUILD_ARTIFACT, function (err, stats) {
-    if (err || !(stats.isFile() || stats.isDirectory())) {
-      // After building, we almost always want to prune back to the production
-      // dependencies, so that the transient development dependencies aren't
-      // left behind. The only reason we wouldn't want to prune is if we're the
-      // top-level package being `npm install`ed with no arguments for
-      // development or testing purposes. If we're the `postinstall` script of a
-      // dependency, we should always prune. Unfortunately, npm doesn't set
-      // any helpful environment variables to indicate whether we're being
-      // installed as a dependency or not. The best we can do is check whether
-      // the parent directory is `node_modules`.
-      var isDependency = path.basename(path.dirname(CWD)) === 'node_modules'
-      // If we're the top-level package being `npm install`ed with no
-      // arguments, we still might want to prune if certain flags indicate that
-      // only production dependencies were requested.
-      var isProduction = (process.env.npm_config_production === 'true' &&
-                          process.env.npm_config_only !== 'development' &&
-                          process.env.npm_config_only !== 'dev')
-      var isOnlyProduction = (process.env.npm_config_only === 'production' ||
-                              process.env.npm_config_only === 'prod')
-      var prune = isDependency || isProduction || isOnlyProduction
+  // After building, we almost always want to prune back to the production
+  // dependencies, so that the transient development dependencies aren't
+  // left behind. The only reason we wouldn't want to prune is if we're the
+  // top-level package being `npm install`ed with no arguments for
+  // development or testing purposes. If we're the `postinstall` script of a
+  // dependency, we should always prune. Unfortunately, npm doesn't set
+  // any helpful environment variables to indicate whether we're being
+  // installed as a dependency or not. The best we can do is check whether
+  // the parent directory is `node_modules`.
+  var isDependency = path.basename(path.dirname(CWD)) === 'node_modules'
 
+  if (flags.onlyAsDependency && !isDependency) {
+    return
+  }
+
+  // If we're the top-level package being `npm install`ed with no
+  // arguments, we still might want to prune if certain flags indicate that
+  // only production dependencies were requested.
+  var isProduction = (process.env.npm_config_production === 'true' &&
+                      process.env.npm_config_only !== 'development' &&
+                      process.env.npm_config_only !== 'dev')
+  var isOnlyProduction = (process.env.npm_config_only === 'production' ||
+                          process.env.npm_config_only === 'prod')
+  var prune = isDependency || isProduction || isOnlyProduction
+
+  fs.stat(buildArtifact, function (err, stats) {
+    if (err || !(stats.isFile() || stats.isDirectory())) {
       // This script will run again after we run `npm install` below. Set an
       // environment variable to tell it to skip the check. Really we just want
       // the spawned child's `env` to be modified, but it's easier just modify
       // and pass along our entire `process.env`.
       process.env.POSTINSTALL_BUILD_CWD = CWD
 
-      var opts = { env: process.env }
-      if (FLAGS.silent) {
+      var opts = {
+        env: process.env,
+        quote: true
+      }
+      if (flags.silent) {
         opts.stdio = 'ignore'
       }
 
       // We already have prod dependencies, that's what triggered `postinstall`
       // in the first place. So only install dev.
-      exec('npm install --only=dev', opts, function (err) {
+      exec(npm + ' install --only=dev', opts, function (err) {
         if (err) {
           console.error(err)
           return safeExit(1)
@@ -153,13 +189,17 @@ if (POSTINSTALL_BUILD_CWD !== CWD) {
         // Change it back so the environment is minimally changed for the
         // remaining commands.
         process.env.POSTINSTALL_BUILD_CWD = POSTINSTALL_BUILD_CWD
-        exec(BUILD_COMMAND, opts, function (err) {
+        // Only quote the build command if necessary, otherwise run it exactly
+        // as npm would.
+        opts.quote = flags.quote
+        exec(buildCommand, opts, function (err) {
           if (err) {
             console.error(err)
             return safeExit(1)
           }
           if (prune) {
-            exec('npm prune --production', opts, function (err) {
+            opts.quote = true
+            exec(npm + ' prune --production', opts, function (err) {
               if (err) {
                 console.error(err)
                 return safeExit(1)
@@ -171,3 +211,5 @@ if (POSTINSTALL_BUILD_CWD !== CWD) {
     }
   })
 }
+
+postinstallBuild()

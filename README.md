@@ -43,6 +43,9 @@ postinstall-build [options] <artifact> [command]
 * `--silent`: Silence the build command’s stdout and stderr. This was the
   default behavior pre-1.0. Note that this may make debugging much more
   difficult if something goes wrong.
+* `--only-as-dependency`: Run only if the package is being installed as a
+  dependency, not if `npm install` (no args) is being run in the package’s own
+  directory (usually while you are developing the package itself).
 * `--script`: Run the given npm script from `package.json` instead of supplying
   a full build command. Specified like: `--script name` or `--script=name`.
 
@@ -128,7 +131,7 @@ could also be written as `postinstall-build lib --script build-lib`.
 
 ### Bugs in npm
 
-**I recommend using npm 3 or better, except for npm 4.1.x.**
+**I recommend using npm 3 or better, except for npm 4.1.x–4.4.x.**
 
 There are several distinct bugs in npm itself that you may encounter when using
 `postinstall-build` with npm 2. I have not been able to work around these nor
@@ -138,9 +141,10 @@ my knowledge they are no fault of this package and are widely reported npm bugs.
 
 * **extraneous packages**
 
-  The `prune` command is broken in npm 4.1.x, and is unable to correctly prune
-  `devDependencies`. Thus, when `postinstall-build` is finishing up, it leaves
-  behind extraneous packages.
+  The `prune` command is broken in npm 4.1.x–4.4.x, and is unable to correctly
+  prune `devDependencies`. Thus, when `postinstall-build` is finishing up, it
+  leaves behind extraneous packages. (See issues [#15727](https://github.com/npm/npm/issues/15727),
+  [#15669](https://github.com/npm/npm/issues/15669), [#15646](https://github.com/npm/npm/issues/15646).)
 
 * **postinstall-build: not found**
 

@@ -6,7 +6,7 @@
   "main": "lib/index.js",
   "scripts": {
     "build-lib": "babel --presets es2015 -d lib src",
-    "postinstall": "postinstall-build lib \"npm run build-lib\""
+    "postinstall": "postinstall-build --only-as-dependency lib \"npm run build-lib\""
   },
   "author": "",
   "license": "ISC",
