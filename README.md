@@ -1,7 +1,8 @@
-[![Travis Status][travis_img]][travis_site]
-[![AppVeyor Status][appveyor_img]][appveyor_site]
-[![npm Version][npm_img]][npm_site]
-[![npm Downloads][downloads_img]][downloads_site]
+[![Travis Status](https://travis-ci.org/exogen/postinstall-build.svg)](https://travis-ci.org/exogen/postinstall-build)
+[![AppVeyor Status](https://ci.appveyor.com/api/projects/status/github/exogen/postinstall-build?svg=true)](https://ci.appveyor.com/project/exogen/postinstall-build)
+[![Greenkeeper badge](https://badges.greenkeeper.io/exogen/postinstall-build.svg)](https://greenkeeper.io/)
+[![npm Version](https://img.shields.io/npm/v/postinstall-build.svg)](https://www.npmjs.com/package/postinstall-build)
+[![npm Downloads](https://img.shields.io/npm/dm/postinstall-build.svg)](https://www.npmjs.com/package/postinstall-build)
 
 # postinstall-build
 
@@ -168,11 +169,3 @@ my knowledge they are no fault of this package and are widely reported npm bugs.
   `npm config set fetch-retries 5` (for example) to work around this; using the
   non-HTTPS registry might also help.
 
-[travis_img]: https://travis-ci.org/exogen/postinstall-build.svg
-[travis_site]: https://travis-ci.org/exogen/postinstall-build
-[appveyor_img]: https://ci.appveyor.com/api/projects/status/github/exogen/postinstall-build?svg=true
-[appveyor_site]: https://ci.appveyor.com/project/exogen/postinstall-build
-[npm_img]: https://img.shields.io/npm/v/postinstall-build.svg?label=npm+package
-[npm_site]: https://www.npmjs.com/package/postinstall-build
-[downloads_img]: https://img.shields.io/npm/dm/postinstall-build.svg
-[downloads_site]: https://www.npmjs.com/package/postinstall-build
