@@ -9,7 +9,7 @@
 Conditionally build in the `postinstall` hook without moving your
 `devDependencies` to `dependencies`.
 
-```shell
+```console
 npm install postinstall-build --save
 ```
 
@@ -18,10 +18,11 @@ npm install postinstall-build --save
 ## Contents
 
 - [What does it do?](#what-does-it-do)
+- [Why?](#why)
 - [Usage](#usage)
   - [Options](#options)
+- [Examples](#examples)
 - [Motivation](#motivation)
-- [Example](#example)
 - [Caveats](#caveats)
   - [Bugs in Yarn](#bugs-in-yarn)
   - [Bugs in npm](#bugs-in-npm)
@@ -34,9 +35,16 @@ npm install postinstall-build --save
 2. If not, temporarily install `devDependencies` and build.
 3. Clean up anything left behind… and that’s it!
 
+## Why?
+
+So that your package with a build step can support Git (and other non-npm)
+install locations without checking build artifacts into source control or making
+everyone install your build dependencies. See [Motivation](#motivation) for more
+details.
+
 ## Usage
 
-```shell
+```console
 postinstall-build [options] <artifact> [command]
 ```
 
@@ -65,6 +73,70 @@ portability – Windows does not treat single-quoted strings as a single
 parameter. (This is the case in any npm script regardless of `postinstall-build`
 usage.)
 
+## Examples
+
+Run the `build` script (the default) if `lib` doesn’t exist during `postinstall`:
+
+```json
+{
+  "scripts": {
+    "build": "babel --presets es2015 --out-dir lib src",
+    "postinstall": "postinstall-build lib"
+  },
+  "dependencies": {
+    "postinstall-build": "^3.0.0"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.0.0",
+    "babel-preset-es2015": "^6.0.0"
+  }
+}
+```
+
+
+Run a different script:
+
+```json
+{
+  "scripts": {
+    "build:lib": "babel --presets=es2015 --out-dir=lib src",
+    "postinstall": "postinstall-build lib --script build:lib"
+  }
+}
+```
+
+Run a non-npm script:
+
+```json
+{
+  "scripts": {
+    "postinstall": "postinstall-build dist \"make dist\""
+  }
+}
+```
+
+---
+
+⚠️ **INCORRECT USAGE** ⚠️
+
+```json
+{
+  "scripts": {
+    "build": "babel --presets es2015 --out-dir lib src",
+    "postinstall": "postinstall-build \"npm run build\""
+  }
+}
+```
+
+This example is missing a build artifact – or rather, `npm run build` is
+mistakenly being passed as the build artifact. Since that file will never exist,
+the build task is always run. Since `npm run build` is provided as the build
+artifact and not the build command, the default build command is used – which
+happens to also be `npm run build`. Things will appear to work, but in fact it
+is building on every `postinstall` unconditionally.
+
+---
+
 ## Motivation
 
 Sometimes you want to install or depend on a package from someplace other than
@@ -72,7 +144,7 @@ npm – for example, from a `git` URL. If the package needs to be transpiled by
 a tool like Babel, then this can be tricky: most people put their build step in
 the `version` or `prepublish` hooks, and if you’re not installing from npm then
 this step probably wasn’t run (unless the build artifacts are checked into
-source).
+source control).
 
 One solution is to add a check to the package’s `postinstall` hook: if the
 build artifacts don’t exist, then build! The annoying part is that this
@@ -87,35 +159,6 @@ This helper fixes that. Just tell it where a build artifact is and what your
 build step is, and it’ll do the rest. Used as intended, `postinstall-build`
 should be in `dependencies`.
 
-## Example
-
-Here’s an example using Babel:
-
-```json
-{
-  "scripts": {
-    "build-lib": "babel --presets es2015 -d lib src",
-    "postinstall": "postinstall-build lib \"npm run build-lib\""
-  },
-  "dependencies": {
-    "postinstall-build": "^2.0.0"
-  },
-  "devDependencies": {
-    "babel-cli": "^6.0.0",
-    "babel-preset-es2015": "^6.0.0"
-  }
-}
-```
-
-The `postinstall-build` helper will check whether the first argument, `lib`,
-exists. If not, it will run the second argument, `npm run build-lib`. Since
-this probably requires your build dependencies (in this case Babel), it will
-run `npm install --only=dev` first. When the build is done, it will run
-`npm prune --production` to clean up. That’s it!
-
-In this example the build command is another npm script. For convenience this
-could also be written as `postinstall-build lib --script build-lib`.
-
 ## Caveats
 
 ### Bugs in Yarn
@@ -127,7 +170,7 @@ could also be written as `postinstall-build lib --script build-lib`.
   `npm` commands that were triggered by a Yarn install (like those run by
   `postinstall-build`) pick up Yarn‘s default `$npm_config_registry` setting
   instead of the one specified in `.npmrc`.
-  
+
   For the time being you can solve this by adding a `.yarnrc` file alongside your
   `.npmrc`, which will cause `$npm_config_registry` to behave as expected.
 
@@ -168,4 +211,3 @@ my knowledge they are no fault of this package and are widely reported npm bugs.
   npm has trouble making lots of connections to its own registry. You can use
   `npm config set fetch-retries 5` (for example) to work around this; using the
   non-HTTPS registry might also help.
-
