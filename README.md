@@ -180,7 +180,7 @@ should be in `dependencies`.
 
 ### Bugs in npm
 
-**I recommend using npm 3 or better, except for npm 4.1.x–4.4.x.**
+**I recommend using npm 3 or better, except for npm 4.1.x–4.5.x.**
 
 There are several distinct bugs in npm itself that you may encounter when using
 `postinstall-build` with npm 2. I have not been able to work around these nor
@@ -190,7 +190,7 @@ my knowledge they are no fault of this package and are widely reported npm bugs.
 
 * **extraneous packages**
 
-  The `prune` command is broken in npm 4.1.x–4.4.x, and is unable to correctly
+  The `prune` command is broken in npm 4.1.x–4.5.x, and is unable to correctly
   prune `devDependencies`. Thus, when `postinstall-build` is finishing up, it
   leaves behind extraneous packages. (See issues [#15727](https://github.com/npm/npm/issues/15727),
   [#15669](https://github.com/npm/npm/issues/15669), [#15646](https://github.com/npm/npm/issues/15646).)
