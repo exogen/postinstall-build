@@ -134,6 +134,14 @@ function postinstallBuild () {
 
   if (buildArtifact == null) {
     throw new Error('A build artifact must be supplied to postinstall-build.')
+  } else if (!flags.silent && /^(npm|yarn) /.test(buildArtifact)) {
+    console.warn(
+      "postinstall-build:\n  '" + buildArtifact + "' is being passed as the " +
+      'build artifact, not the build command.\n  If your build artifact is ' +
+      "a file or folder named '" + buildArtifact + "', you may ignore\n  " +
+      'this warning. Otherwise, you probably meant to pass this as the build ' +
+      'command\n  instead, and must supply a build artifact.\n'
+    )
   }
 
   // After building, we almost always want to prune back to the production
