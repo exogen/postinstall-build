@@ -11,10 +11,11 @@
   },
   "main": "index.js",
   "bin": {
-    "postinstall-build": "index.js"
+    "postinstall-build": "cli.js"
   },
   "files": [
-    "index.js"
+    "index.js",
+    "cli.js"
   ],
   "scripts": {
     "build": "npm run build:docs",

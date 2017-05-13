@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 var fs = require('fs')
 var path = require('path')
 var spawn = require('child_process').spawn
@@ -212,4 +211,4 @@ function postinstallBuild () {
   })
 }
 
-postinstallBuild()
+module.exports = postinstallBuild
