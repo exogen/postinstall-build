@@ -6,14 +6,17 @@ environment:
     - nodejs_version: "6.5"
       TEST_NPM_VERSION: "4"
 
+    - nodejs_version: "7.9"
+      TEST_NPM_VERSION: "4"
+
     - nodejs_version: "4.4"
       TEST_NPM_VERSION: "4.0"
 
     - nodejs_version: "6.5"
       TEST_NPM_VERSION: "4.0"
 
-    - nodejs_version: "0.10"
-      TEST_NPM_VERSION: "3"
+    - nodejs_version: "7.9"
+      TEST_NPM_VERSION: "4.0"
 
     - nodejs_version: "0.12"
       TEST_NPM_VERSION: "3"
@@ -24,16 +27,13 @@ environment:
     - nodejs_version: "6.5"
       TEST_NPM_VERSION: "3"
 
-    - nodejs_version: "0.10"
-      TEST_NPM_VERSION: "2"
+    - nodejs_version: "7.9"
+      TEST_NPM_VERSION: "3"
 
     - nodejs_version: "0.12"
       TEST_NPM_VERSION: "2"
 
     - nodejs_version: "4.4"
-      TEST_NPM_VERSION: "2"
-
-    - nodejs_version: "6.5"
       TEST_NPM_VERSION: "2"
 
 matrix:
