@@ -60,9 +60,11 @@ postinstall-build [options] <artifact> [command]
 * `--only-as-dependency`: Run only if the package is being installed as a
   dependency, not if `npm install` (no args) is being run in the package’s own
   directory (usually while you are developing the package itself).
-* `--silent`: Silence the build command’s stdout and stderr. This was the
-  default behavior pre-1.0. Note that this may make debugging much more
-  difficult if something goes wrong.
+* `--silent`: Silence the build command’s stdout and stderr, as well as any
+  warnings from `postinstall-build` itself. Fatal errors will still be printed.
+  Note that this may make debugging much more difficult if something goes wrong.
+* `--verbose`: Print information about what `postinstall-build` is doing and
+  why (as well as the usual warnings and errors).
 
 If neither `command` nor `--script` is supplied, the build command defaults to
 `npm run build`.

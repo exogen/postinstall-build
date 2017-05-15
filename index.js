@@ -88,11 +88,16 @@ function postinstallBuild () {
 
   var buildArtifact
   var buildCommand
-  var flags = { quote: false }
+  var flags = {
+    quote: false,
+    verbosity: 1
+  }
   for (var i = 2; i < process.argv.length; i++) {
     var arg = process.argv[i]
     if (arg === '--silent') {
-      flags.silent = true
+      flags.verbosity = 0
+    } else if (arg === '--verbose') {
+      flags.verbosity = 2
     } else if (arg === '--only-as-dependency') {
       flags.onlyAsDependency = true
     } else if (arg === '--script') {
@@ -109,7 +114,7 @@ function postinstallBuild () {
 
   // Some packages (e.g. `ember-cli`) install their own version of npm, which
   // can shadow the expected version and break the package trying to use
-  // `postinstall-build`. If we're running
+  // `postinstall-build`.
   var npm = 'npm'
   var execPath = process.env.npm_execpath
   var userAgent = process.env.npm_config_user_agent || ''
@@ -132,10 +137,27 @@ function postinstallBuild () {
     buildCommand = npm + ' run build'
   }
 
+  var _write = function (verbosity, message) {
+    if (flags.verbosity >= verbosity) {
+      process.stderr.write(message + '\n')
+    }
+  }
+
+  var log = {
+    info: _write.bind(this, 2),
+    warn: _write.bind(this, 1),
+    error: _write.bind(this, 0)
+  }
+
+  var handleError = function (err) {
+    log.error('postinstall-build:\n  ' + err + '\n')
+    safeExit(1)
+  }
+
   if (buildArtifact == null) {
-    throw new Error('A build artifact must be supplied to postinstall-build.')
-  } else if (!flags.silent && /^(npm|yarn) /.test(buildArtifact)) {
-    console.warn(
+    return handleError('A build artifact must be supplied.')
+  } else if (/^(npm|yarn) /.test(buildArtifact)) {
+    log.warn(
       "postinstall-build:\n  '" + buildArtifact + "' is being passed as the " +
       'build artifact, not the build command.\n  If your build artifact is ' +
       "a file or folder named '" + buildArtifact + "', you may ignore\n  " +
@@ -156,6 +178,9 @@ function postinstallBuild () {
   var isDependency = path.basename(path.dirname(CWD)) === 'node_modules'
 
   if (flags.onlyAsDependency && !isDependency) {
+    log.info(
+      'postinstall-build:\n  Not installed as a dependency, skipping build.\n'
+    )
     return
   }
 
@@ -168,11 +193,6 @@ function postinstallBuild () {
   var isOnlyProduction = (process.env.npm_config_only === 'production' ||
                           process.env.npm_config_only === 'prod')
   var shouldPrune = isDependency || isProduction || isOnlyProduction
-
-  var handleError = function (err) {
-    console.error(err)
-    safeExit(1)
-  }
 
   var getInstallArgs = function () {
     var packageFile = path.join(CWD, 'package.json')
@@ -190,14 +210,12 @@ function postinstallBuild () {
         // `buildDependencies` and expects it to be installed by
         // `postinstall-build`, then it must also be in `devDependencies`.
         if (typeof spec === 'undefined') {
-          if (!flags.silent) {
-            console.warn(
-              "postinstall-build:\n  The dependency '" + name + "' appears in " +
-              'buildDependencies but not devDependencies.\n  Instead of ' +
-              'installing it, postinstall-build will assume it is already ' +
-              'available.\n'
-            )
-          }
+          log.warn(
+            "postinstall-build:\n  The dependency '" + name + "' appears in " +
+            'buildDependencies but not devDependencies.\n  Instead of ' +
+            'installing it, postinstall-build will assume it is already ' +
+            'available.\n'
+          )
           return ''
         } else if (spec) {
           // This previously used `npm-package-arg` to determine which specs are
@@ -220,8 +238,15 @@ function postinstallBuild () {
   var checkBuildArtifact = function (callback) {
     fs.stat(buildArtifact, function (err, stats) {
       if (err || !(stats.isFile() || stats.isDirectory())) {
+        log.info(
+          'postinstall-build:\n  Build artifact not found, proceeding to ' +
+          'build.\n'
+        )
         callback(null, true)
       } else {
+        log.info(
+          'postinstall-build:\n  Build artifact found, skipping build.\n'
+        )
         callback(null, false)
       }
     })
@@ -238,9 +263,17 @@ function postinstallBuild () {
       // extra dependencies.
       var installArgs = getInstallArgs()
       if (installArgs) {
-        return exec(npm + ' install' + installArgs, execOpts, callback)
+        var command = npm + ' install' + installArgs
+        log.info('postinstall-build:\n  ' + command + '\n')
+        return exec(command, execOpts, callback)
       }
+      log.info(
+        'postinstall-build:\n  No install arguments, skipping install.\n'
+      )
     }
+    log.info(
+      'postinstall-build:\n  Already have devDependencies, skipping install.\n'
+    )
     callback(null)
   }
 
@@ -248,14 +281,18 @@ function postinstallBuild () {
     // Only quote the build command if necessary, otherwise run it exactly
     // as npm would.
     execOpts.quote = flags.quote
+    log.info('postinstall-build:\n  ' + buildCommand + '\n')
     exec(buildCommand, execOpts, callback)
   }
 
   var cleanUp = function (execOpts, callback) {
     if (shouldPrune) {
       execOpts.quote = true
-      return exec(npm + ' prune --production', execOpts, callback)
+      var command = npm + ' prune --production'
+      log.info('postinstall-build:\n  ' + command + '\n')
+      return exec(command, execOpts, callback)
     }
+    log.info('postinstall-build:\n  Skipping prune.\n')
     callback(null)
   }
 
@@ -275,7 +312,7 @@ function postinstallBuild () {
         env: process.env,
         quote: true
       }
-      if (flags.silent) {
+      if (flags.verbosity === 0) {
         execOpts.stdio = 'ignore'
       }
 
