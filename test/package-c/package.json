@@ -5,7 +5,7 @@
   "description": "Test that we can both depend on multiple packages that use postinstall-build, and also depend on a package that depends on a package that uses postinstall-build",
   "main": "lib/index.js",
   "scripts": {
-    "build": "babel --presets es2015 -d lib src",
+    "build": "node ./ensure-no-mocha.js && babel --presets es2015 -d lib src",
     "postinstall": "postinstall-build lib"
   },
   "author": "",
@@ -17,6 +17,12 @@
   },
   "devDependencies": {
     "babel-cli": "^6.0.0",
-    "babel-preset-es2015": "^6.0.0"
-  }
+    "babel-preset-es2015": "^6.0.0",
+    "mocha": "latest"
+  },
+  "buildDependencies": [
+    "babel-cli",
+    "babel-preset-es2015",
+    "jasmine"
+  ]
 }

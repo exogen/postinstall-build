@@ -21,6 +21,7 @@ npm install postinstall-build --save
 - [Why?](#why)
 - [Usage](#usage)
   - [Options](#options)
+    - [Specifying build dependencies in package.json](#specifying-build-dependencies-in-packagejson)
 - [Examples](#examples)
 - [Motivation](#motivation)
 - [Caveats](#caveats)
@@ -81,6 +82,15 @@ portability – Windows does not treat single-quoted strings as a single
 parameter. (This is the case in any npm script regardless of `postinstall-build`
 usage.)
 
+#### Specifying build dependencies in package.json
+
+If you specify a `buildDependencies` array in `package.json`, you can control
+which dependencies are installed before your build command is run. `buildDependencies`
+must be an array of package names that also appear in `devDependencies`. If a
+package named in `buildDependencies` does not exist in `devDependencies`, then
+it is assumed to already be available (as a global, peer, or production
+dependency), will not be installed, and a warning will be printed.
+
 ## Examples
 
 Run the `build` script (the default) if `lib` doesn’t exist during `postinstall`:
@@ -120,6 +130,31 @@ Run a non-npm script:
   "scripts": {
     "postinstall": "postinstall-build dist \"make dist\""
   }
+}
+```
+
+Install only the necessary build dependencies:
+
+```json
+{
+  "scripts": {
+    "build": "babel --presets es2015 --out-dir lib src",
+    "postinstall": "postinstall-build lib"
+  },
+  "dependencies": {
+    "postinstall-build": "^3.0.0"
+  },
+  "devDependencies": {
+    "ava": "latest",
+    "babel-cli": "^6.0.0",
+    "babel-preset-es2015": "^6.0.0",
+    "nyc": "latest",
+    "prettier": "latest"
+  },
+  "buildDependencies": [
+    "babel-cli",
+    "babel-preset-es2015"
+  ]
 }
 ```
 

@@ -159,60 +159,144 @@ function postinstallBuild () {
     return
   }
 
-  // If we're the top-level package being `npm install`ed with no
-  // arguments, we still might want to prune if certain flags indicate that
-  // only production dependencies were requested.
+  // If we're the top-level package being `npm install`ed with no arguments,
+  // we still might want to prune if certain flags indicate that only production
+  // dependencies were requested.
   var isProduction = (process.env.npm_config_production === 'true' &&
                       process.env.npm_config_only !== 'development' &&
                       process.env.npm_config_only !== 'dev')
   var isOnlyProduction = (process.env.npm_config_only === 'production' ||
                           process.env.npm_config_only === 'prod')
-  var prune = isDependency || isProduction || isOnlyProduction
+  var shouldPrune = isDependency || isProduction || isOnlyProduction
 
-  fs.stat(buildArtifact, function (err, stats) {
-    if (err || !(stats.isFile() || stats.isDirectory())) {
-      // This script will run again after we run `npm install` below. Set an
-      // environment variable to tell it to skip the check. Really we just want
-      // the spawned child's `env` to be modified, but it's easier just modify
-      // and pass along our entire `process.env`.
+  var handleError = function (err) {
+    console.error(err)
+    safeExit(1)
+  }
+
+  var getInstallArgs = function () {
+    var packageFile = path.join(CWD, 'package.json')
+    var packageInfo = require(packageFile)
+    var devDependencies = packageInfo.devDependencies || {}
+    var buildDependencies = packageInfo.buildDependencies
+    var installArgs = ' --only=dev'
+
+    if (buildDependencies && Array.isArray(buildDependencies)) {
+      installArgs = buildDependencies.map(function (name) {
+        var spec = devDependencies[name]
+        // If a name specified in `buildDependencies` doesn't actually exist in
+        // `devDependencies`, it may be a global, peer, or production dependency.
+        // Assume it is already available. If a user puts something in
+        // `buildDependencies` and expects it to be installed by
+        // `postinstall-build`, then it must also be in `devDependencies`.
+        if (typeof spec === 'undefined') {
+          if (!flags.silent) {
+            console.warn(
+              "postinstall-build:\n  The dependency '" + name + "' appears in " +
+              'buildDependencies but not devDependencies.\n  Instead of ' +
+              'installing it, postinstall-build will assume it is already ' +
+              'available.\n'
+            )
+          }
+          return ''
+        } else if (spec) {
+          // This previously used `npm-package-arg` to determine which specs are
+          // appropriate to use with the @ syntax and which aren't, but the latest
+          // version no longer works on Node <4, and older versions don't have the
+          // properties we want. So instead of trying to parse `spec`, just assume
+          // npm is okay with always using @ syntax.
+          return ' "' + name + '@' + spec + '"'
+        } else {
+          // We shouldn't really expect to find a null or empty spec, but it's
+          // technically possible, and npm will interpret it as `latest`.
+          return ' "' + name + '"'
+        }
+      }).join('')
+    }
+
+    return installArgs
+  }
+
+  var checkBuildArtifact = function (callback) {
+    fs.stat(buildArtifact, function (err, stats) {
+      if (err || !(stats.isFile() || stats.isDirectory())) {
+        callback(null, true)
+      } else {
+        callback(null, false)
+      }
+    })
+  }
+
+  var installBuildDependencies = function (execOpts, callback) {
+    // We only need to install dependencies if `shouldPrune` is true. Why?
+    // Because this flag detects whether `devDependencies` were already
+    // installed in order to determine whether they need to be pruned at the
+    // end or not. And if we already have `devDependencies` then installing
+    // here isn't going to get us anything.
+    if (shouldPrune) {
+      // If `installArgs` is empty, the build doesn't depend on installing any
+      // extra dependencies.
+      var installArgs = getInstallArgs()
+      if (installArgs) {
+        return exec(npm + ' install' + installArgs, execOpts, callback)
+      }
+    }
+    callback(null)
+  }
+
+  var runBuildCommand = function (execOpts, callback) {
+    // Only quote the build command if necessary, otherwise run it exactly
+    // as npm would.
+    execOpts.quote = flags.quote
+    exec(buildCommand, execOpts, callback)
+  }
+
+  var cleanUp = function (execOpts, callback) {
+    if (shouldPrune) {
+      execOpts.quote = true
+      return exec(npm + ' prune --production', execOpts, callback)
+    }
+    callback(null)
+  }
+
+  checkBuildArtifact(function (err, shouldBuild) {
+    if (err) {
+      return handleError(err)
+    }
+    if (shouldBuild) {
+      // If `npm install` ends up being run by `installBuildDependencies`, this
+      // script will be run again. Set an environment variable to tell it to
+      // skip the check. Really we just want the spawned child's `env` to be
+      // modified, but it's easier just modify and pass along our entire
+      // `process.env`.
       process.env.POSTINSTALL_BUILD_CWD = CWD
 
-      var opts = {
+      var execOpts = {
         env: process.env,
         quote: true
       }
       if (flags.silent) {
-        opts.stdio = 'ignore'
+        execOpts.stdio = 'ignore'
       }
 
-      // We already have prod dependencies, that's what triggered `postinstall`
-      // in the first place. So only install dev.
-      exec(npm + ' install --only=dev', opts, function (err) {
+      installBuildDependencies(execOpts, function (err) {
         if (err) {
-          console.error(err)
-          return safeExit(1)
+          return handleError(err)
         }
-        // Don't need the flag anymore as `postinstall` was already run.
+        // Don't need this flag anymore as `postinstall` was already run.
         // Change it back so the environment is minimally changed for the
         // remaining commands.
         process.env.POSTINSTALL_BUILD_CWD = POSTINSTALL_BUILD_CWD
-        // Only quote the build command if necessary, otherwise run it exactly
-        // as npm would.
-        opts.quote = flags.quote
-        exec(buildCommand, opts, function (err) {
+
+        runBuildCommand(execOpts, function (err) {
           if (err) {
-            console.error(err)
-            return safeExit(1)
+            return handleError(err)
           }
-          if (prune) {
-            opts.quote = true
-            exec(npm + ' prune --production', opts, function (err) {
-              if (err) {
-                console.error(err)
-                return safeExit(1)
-              }
-            })
-          }
+          cleanUp(execOpts, function (err) {
+            if (err) {
+              return handleError(err)
+            }
+          })
         })
       })
     }
