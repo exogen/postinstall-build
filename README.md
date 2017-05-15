@@ -180,7 +180,8 @@ mistakenly being passed as the build artifact. Since that file will never exist,
 the build task is always run. Since `npm run build` is provided as the build
 artifact and not the build command, the default build command is used – which
 happens to also be `npm run build`. Things will appear to work, but in fact it
-is building on every `postinstall` unconditionally.
+is building on every `postinstall` unconditionally. `postinstall-build` will
+issue a warning if it suspects the arguments are incorrect.
 
 ---
 
