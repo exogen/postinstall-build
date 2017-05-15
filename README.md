@@ -50,18 +50,18 @@ postinstall-build [options] <artifact> [command]
 
 ### Options
 
-* `--silent`: Silence the build command’s stdout and stderr. This was the
-  default behavior pre-1.0. Note that this may make debugging much more
-  difficult if something goes wrong.
-* `--only-as-dependency`: Run only if the package is being installed as a
-  dependency, not if `npm install` (no args) is being run in the package’s own
-  directory (usually while you are developing the package itself).
 * `--script`: Run the given npm script from `package.json` instead of supplying
   a full build command. Specified like: `--script name` or `--script=name`. This
   is the **recommended** way to supply the build command if it is an npm script,
   because is guaranteed to use the same `$npm_execpath` that triggered
   `postinstall` (as opposed to potentially using an incompatible version of npm
   installed in `node_modules` by a dependency), if the user agent is npm.
+* `--only-as-dependency`: Run only if the package is being installed as a
+  dependency, not if `npm install` (no args) is being run in the package’s own
+  directory (usually while you are developing the package itself).
+* `--silent`: Silence the build command’s stdout and stderr. This was the
+  default behavior pre-1.0. Note that this may make debugging much more
+  difficult if something goes wrong.
 
 If neither `command` nor `--script` is supplied, the build command defaults to
 `npm run build`.
