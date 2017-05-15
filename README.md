@@ -53,7 +53,7 @@ postinstall-build [options] <artifact> [command]
 * `--script`: Run the given npm script from `package.json` instead of supplying
   a full build command. Specified like: `--script name` or `--script=name`. This
   is the **recommended** way to supply the build command if it is an npm script,
-  because is guaranteed to use the same `$npm_execpath` that triggered
+  because it is guaranteed to use the same `$npm_execpath` that triggered
   `postinstall` (as opposed to potentially using an incompatible version of npm
   installed in `node_modules` by a dependency), if the user agent is npm.
 * `--only-as-dependency`: Run only if the package is being installed as a
