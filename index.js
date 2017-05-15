@@ -57,6 +57,8 @@ function exec (command, options, callback) {
     }
     procDone(err)
   })
+
+  return proc
 }
 
 // If we call `process.exit` immediately after logging to the console, then
@@ -118,10 +120,11 @@ function postinstallBuild () {
   var npm = 'npm'
   var execPath = process.env.npm_execpath
   var userAgent = process.env.npm_config_user_agent || ''
+  var npmVersion = (userAgent.match(/^npm\/([^\s]+)/) || [])[1]
   // If the user agent doesn't start with `npm/`, just fall back to running
   // `npm` since alternative agents (e.g. Yarn) may not support the same
   // commands (like `prune`).
-  if (execPath && userAgent.indexOf('npm/') === 0) {
+  if (execPath && npmVersion) {
     npm = '"' + process.argv[0] + '" "' + execPath + '"'
   }
 
@@ -235,6 +238,18 @@ function postinstallBuild () {
     return installArgs
   }
 
+  var warnUserAgent = function () {
+    if (npmVersion && !/^(3\.|4\.0\.)/.test(npmVersion)) {
+      log.warn(
+        'postinstall-build:\n  This version of npm (' + npmVersion + ') may ' +
+        'not be compatible with postinstall-build! There\n  are outstanding ' +
+        'bugs in certain versions of npm that prevent it from working with\n  ' +
+        'postinstall-build. See https://github.com/exogen/postinstall-build#bugs-in-npm\n  ' +
+        'for more information.\n'
+      )
+    }
+  }
+
   var checkBuildArtifact = function (callback) {
     fs.stat(buildArtifact, function (err, stats) {
       if (err || !(stats.isFile() || stats.isDirectory())) {
@@ -249,6 +264,30 @@ function postinstallBuild () {
         )
         callback(null, false)
       }
+    })
+  }
+
+  var checkUserAgent = function (callback) {
+    // If we know an incompatible version of npm triggered `postinstall-build`,
+    // print a warning. Note that if the original user agent is NOT npm, then we
+    // don't know what version `postinstall-build` will actually run, since the
+    // `$npm_config_user_agent` string didn't tell us, so run `npm --version` to
+    // find out.
+    if (npmVersion) {
+      warnUserAgent()
+      return callback(null, npmVersion)
+    }
+    var output = ''
+    var command = npm + ' --version'
+    log.info('postinstall-build:\n  ' + command + '\n')
+    var proc = exec(command, { stdio: 'pipe' }, function (err) {
+      npmVersion = (output.match(/^(\d[^\s]*)/) || [])[1]
+      warnUserAgent()
+      callback(err, npmVersion)
+    })
+    proc.stdout.setEncoding('utf8')
+    proc.stdout.on('data', function (chunk) {
+      output += chunk
     })
   }
 
@@ -301,38 +340,47 @@ function postinstallBuild () {
       return handleError(err)
     }
     if (shouldBuild) {
-      // If `npm install` ends up being run by `installBuildDependencies`, this
-      // script will be run again. Set an environment variable to tell it to
-      // skip the check. Really we just want the spawned child's `env` to be
-      // modified, but it's easier just modify and pass along our entire
-      // `process.env`.
-      process.env.POSTINSTALL_BUILD_CWD = CWD
-
-      var execOpts = {
-        env: process.env,
-        quote: true
-      }
-      if (flags.verbosity === 0) {
-        execOpts.stdio = 'ignore'
-      }
-
-      installBuildDependencies(execOpts, function (err) {
+      checkUserAgent(function (err) {
+        // If an error occurred, the only consequence is that we don't know
+        // which version of npm is going to be run, and can't issue a warning.
+        // If there's an actual problem running npm we'll find out soon enough.
         if (err) {
-          return handleError(err)
+          log.warn('postinstall-build:\n  ' + err + '\n')
         }
-        // Don't need this flag anymore as `postinstall` was already run.
-        // Change it back so the environment is minimally changed for the
-        // remaining commands.
-        process.env.POSTINSTALL_BUILD_CWD = POSTINSTALL_BUILD_CWD
 
-        runBuildCommand(execOpts, function (err) {
+        // If `npm install` ends up being run by `installBuildDependencies`, this
+        // script will be run again. Set an environment variable to tell it to
+        // skip the check. Really we just want the spawned child's `env` to be
+        // modified, but it's easier just modify and pass along our entire
+        // `process.env`.
+        process.env.POSTINSTALL_BUILD_CWD = CWD
+
+        var execOpts = {
+          env: process.env,
+          quote: true
+        }
+        if (flags.verbosity === 0) {
+          execOpts.stdio = 'ignore'
+        }
+
+        installBuildDependencies(execOpts, function (err) {
           if (err) {
             return handleError(err)
           }
-          cleanUp(execOpts, function (err) {
+          // Don't need this flag anymore as `postinstall` was already run.
+          // Change it back so the environment is minimally changed for the
+          // remaining commands.
+          process.env.POSTINSTALL_BUILD_CWD = POSTINSTALL_BUILD_CWD
+
+          runBuildCommand(execOpts, function (err) {
             if (err) {
               return handleError(err)
             }
+            cleanUp(execOpts, function (err) {
+              if (err) {
+                return handleError(err)
+              }
+            })
           })
         })
       })
