@@ -63,8 +63,10 @@ postinstall-build [options] <artifact> [command]
 * `--silent`: Silence the build command’s stdout and stderr, as well as any
   warnings from `postinstall-build` itself. Fatal errors will still be printed.
   Note that this may make debugging much more difficult if something goes wrong.
+  Overrides `--verbose` (the last one specified wins).
 * `--verbose`: Print information about what `postinstall-build` is doing and
-  why (as well as the usual warnings and errors).
+  why (as well as the usual warnings and errors). Overrides `--silent` (the last
+  one specified wins).
 
 If neither `command` nor `--script` is supplied, the build command defaults to
 `npm run build`.
