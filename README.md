@@ -267,10 +267,10 @@ my knowledge they are no fault of this package and are widely reported npm bugs.
 When npm installs from a Git repository or any other non-package location, it
 will first prepare the directory as if it were publishing a package. This
 includes respecting the `.npmignore` file and `files` field in `package.json`,
-which means that `postinstall` scripts are executed with a subset of the files
-you may need to run your build step (if you have `.npmignore` or `files`
-configured). Thus, in order for `postinstall-build` to work, you should **not**
-ignore the source files or any necessary configuration (for example, `.babelrc`).
+which means that `postinstall` scripts may be executed with a subset of the
+files you may need to run your build step. Thus, in order for `postinstall-build`
+to work, you should **not** ignore the source files or any necessary
+configuration (for example, `.babelrc`).
 
 This is not ideal, but it’s how npm works. If you are determined to exclude
 unnecessary source and configuration files from the published npm package,
