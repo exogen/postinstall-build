@@ -272,8 +272,8 @@ ENOENT: no such file or directory, chmod '[…]/lib/index.js'
 
 This happens because npm needs to symlink any files referenced in the `bin`
 field and make them executable, but this step is performed before `postinstall`.
-`postinstall-build` can’t do anything to address this shortcoming, but the
-solution is simple. Create a simple non-built file (that is, not created during
+`postinstall-build` can’t do anything to address this shortcoming, but there is
+an easy workaround. Create a simple non-built file (that is, not created during
 the build step) that imports the built file you actually want to target. For
 example, you could create a top-level file called `cli.js` like so:
 
