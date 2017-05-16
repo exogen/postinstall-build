@@ -27,6 +27,7 @@ npm install postinstall-build --save
 - [Caveats](#caveats)
   - [Bugs in Yarn](#bugs-in-yarn)
   - [Bugs in npm](#bugs-in-npm)
+  - [Building a file referenced by package.json `bin`](#building-a-file-referenced-by-packagejson-bin)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -259,3 +260,32 @@ my knowledge they are no fault of this package and are widely reported npm bugs.
   npm has trouble making lots of connections to its own registry. You can use
   `npm config set fetch-retries 5` (for example) to work around this; using the
   non-HTTPS registry might also help.
+
+### Building a file referenced by package.json `bin`
+
+If your `package.json` file uses the `bin` field, and that file does not exist
+before building, you may see an error like this:
+
+```console
+ENOENT: no such file or directory, chmod '[…]/lib/index.js'
+```
+
+This happens because npm needs to symlink any files referenced in the `bin`
+field and make them executable, but this step is performed before `postinstall`.
+`postinstall-build` can’t do anything to address this shortcoming, but the
+solution is simple. Create a simple non-built file (that is, not created during
+the build step) that imports the built file you actually want to target. For
+example, you could create a top-level file called `cli.js` like so:
+
+```js
+require('./lib/index');
+```
+
+Or, export the program’s behavior in a function and call it:
+
+```js
+require('./lib/index').run();
+```
+
+Make sure to update your `bin` field to the new file (in this case, `cli.js`)
+and include it in your npm package and repository.
