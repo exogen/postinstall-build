@@ -27,6 +27,7 @@ npm install postinstall-build --save
 - [Caveats](#caveats)
   - [Bugs in Yarn](#bugs-in-yarn)
   - [Bugs in npm](#bugs-in-npm)
+  - [Excluding source files via `.npmignore` or `files`](#excluding-source-files-via-npmignore-or-files)
   - [Building a file referenced by package.json `bin`](#building-a-file-referenced-by-packagejson-bin)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -260,6 +261,21 @@ my knowledge they are no fault of this package and are widely reported npm bugs.
   npm has trouble making lots of connections to its own registry. You can use
   `npm config set fetch-retries 5` (for example) to work around this; using the
   non-HTTPS registry might also help.
+
+### Excluding source files via `.npmignore` or `files`
+
+When npm installs from a Git repository or any other non-package location, it
+will first prepare the directory as if it were publishing a package. This
+includes respecting the `.npmignore` file and `files` field in `package.json`,
+which means that `postinstall` scripts are executed with a subset of the files
+you may need to run your build step (if you have `.npmignore` or `files`
+configured). Thus, in order for `postinstall-build` to work, you should **not**
+ignore the source files or any necessary configuration (for example, `.babelrc`).
+
+This is not ideal, but it’s how npm works. If you are determined to exclude
+unnecessary source and configuration files from the published npm package,
+you may want to consider a publishing step that alters the `.npmignore` or
+`files` settings.
 
 ### Building a file referenced by package.json `bin`
 
