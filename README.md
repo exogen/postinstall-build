@@ -263,8 +263,8 @@ my knowledge they are no fault of this package and are widely reported npm bugs.
 
 ### Building a file referenced by package.json `bin`
 
-If your `package.json` file uses the `bin` field, and that file does not exist
-before building, you may see an error like this:
+If your `package.json` file uses the `bin` field, and any of the referenced
+files do not exist before building, you may see an error like this:
 
 ```console
 ENOENT: no such file or directory, chmod '[…]/lib/index.js'
