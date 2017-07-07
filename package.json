@@ -1,6 +1,6 @@
 {
   "name": "postinstall-build",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "description": "Helper for conditionally building your npm package on postinstall in order to support git installs.",
   "repository": {
     "type": "git",
