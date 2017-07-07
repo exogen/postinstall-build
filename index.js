@@ -177,8 +177,10 @@ function postinstallBuild () {
   // dependency, we should always prune. Unfortunately, npm doesn't set
   // any helpful environment variables to indicate whether we're being
   // installed as a dependency or not. The best we can do is check whether
-  // the parent directory is `node_modules`.
-  var isDependency = path.basename(path.dirname(CWD)) === 'node_modules'
+  // the parent directory is `node_modules` but the package can be nested
+  // in multiple parent directories so we split apart the name of the module.
+  var parentDirs = CWD.split(path.sep)
+  var isDependency = parentDirs.indexOf('node_modules') !== -1
 
   if (flags.onlyAsDependency && !isDependency) {
     log.info(
