@@ -5,6 +5,7 @@ node_js:
   - "4.4"
   - "6.5"
   - "7.9"
+  - "10"
 
 # Use container-based Travis infrastructure.
 sudo: false
