@@ -6,6 +6,8 @@
 
 # postinstall-build
 
+⚠️ **NOTE!** As of npm 5.0.0, this functionality is built into npm! The new `prepare` lifecycle script will build your package when installed from git. If possible, I recommend migrating off of `postinstall-build` and onto the official support for `prepare`.
+
 Conditionally build in the `postinstall` hook without moving your
 `devDependencies` to `dependencies`.
 
