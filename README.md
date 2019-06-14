@@ -1,6 +1,5 @@
 [![Travis Status](https://travis-ci.org/exogen/postinstall-build.svg)](https://travis-ci.org/exogen/postinstall-build)
 [![AppVeyor Status](https://ci.appveyor.com/api/projects/status/github/exogen/postinstall-build?svg=true)](https://ci.appveyor.com/project/exogen/postinstall-build)
-[![Greenkeeper badge](https://badges.greenkeeper.io/exogen/postinstall-build.svg)](https://greenkeeper.io/)
 [![npm Version](https://img.shields.io/npm/v/postinstall-build.svg)](https://www.npmjs.com/package/postinstall-build)
 [![npm Downloads](https://img.shields.io/npm/dm/postinstall-build.svg)](https://www.npmjs.com/package/postinstall-build)
 
